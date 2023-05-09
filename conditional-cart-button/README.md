@@ -1,4 +1,6 @@
-# The Conditional Cart Button plugin is a simple and lightweight WooCommerce plugin that displays a cart button on your website with conditional text based on the contents of the user's shopping cart. If the cart is empty, the button will show "Cart Empty", and if there are items in the cart, the button will display "View Cart" along with the number of items in the cart. The plugin includes a shortcode that can be added to any page or post on your website. It also comes with custom CSS styles to customize the look of the button. In addition, the plugin includes error handling to ensure that it only runs when WooCommerce is active.
+# The Conditional Cart Button plugin
+
+The Conditional Cart Button plugin is a simple and lightweight WooCommerce plugin that displays a cart button on your website with conditional text based on the contents of the user's shopping cart. If the cart is empty, the button will show "Cart Empty", and if there are items in the cart, the button will display "View Cart" along with the number of items in the cart. The plugin includes a shortcode that can be added to any page or post on your website. It also comes with custom CSS styles to customize the look of the button. In addition, the plugin includes error handling to ensure that it only runs when WooCommerce is active.
 
 ## Installation
 
