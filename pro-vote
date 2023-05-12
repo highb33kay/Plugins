@@ -1,0 +1,74 @@
+<?php
+
+/**
+ * Plugin Name: Product Upvote and Downvote
+ * Description: This plugin adds an up vote and down vote button to product archive pages and product pages.
+ * Author: Highb33kay
+ * Author URI: www.github.com/highb33kay
+ */
+
+// Exit if accessed directly.
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+// Enqueue scripts and styles.
+add_action('wp_enqueue_scripts', 'pro_vote_scripts');
+
+function pro_vote_scripts()
+{
+    wp_enqueue_style('pro-vote-style', plugin_dir_url(__FILE__) . 'css/pro-vote-style.css');
+    wp_enqueue_script('pro-vote-script', plugin_dir_url(__FILE__) . 'js/pro-vote-script.js', array('jquery'), '1.0.0', true);
+}
+
+// Add up vote and down vote buttons to product archive pages.
+add_action('woocommerce_after_shop_loop_item', 'pro_vote_buttons', 15);
+
+function pro_vote_buttons()
+{
+    global $product;
+    $product_id = $product->get_id();
+    $up_vote_count = get_post_meta($product_id, 'up_vote_count', true);
+    $down_vote_count = get_post_meta($product_id, 'down_vote_count', true);
+?>
+    <div class="pro-vote-buttons">
+        <a href="#" class="pro-vote-up" data-product-id="<?php echo $product_id; ?>">
+            <i class="fa fa-thumbs-up"></i>
+            <span class="pro-vote-count"><?php echo $up_vote_count; ?></span>
+        </a>
+        <a href="#" class="pro-vote-down" data-product-id="<?php echo $product_id; ?>">
+            <i class="fa fa-thumbs-down"></i>
+            <span class="pro-vote-count"><?php echo $down_vote_count; ?></span>
+        </a>
+    </div>
+<?php
+}
+
+// Add up vote and down vote buttons to product pages.
+add_action('woocommerce_single_product_summary', 'pro_vote_buttons_single', 15);
+
+function pro_vote_buttons_single()
+{
+    global $product;
+    $product_id = $product->get_id();
+    $up_vote_count = get_post_meta($product_id, 'up_vote_count', true);
+    $down_vote_count = get_post_meta($product_id, 'down_vote_count', true);
+?>
+    <div class="pro-vote-buttons">
+        <a href="#" class="pro-vote-up" data-product-id="<?php echo $product_id; ?>">
+            <i class="fa fa-thumbs-up"></i>
+            <span class="pro-vote-count"><?php echo $up_vote_count; ?></span>
+        </a>
+        <a href="#" class="pro-vote-down" data-product-id="<?php echo $product_id; ?>">
+            <i class="fa fa-thumbs-down"></i>
+            <span class="pro-vote-count"><?php echo $down_vote_count; ?></span>
+        </a>
+    </div>
+<?php
+}
+
+// Add up vote and down vote buttons to product pages.
+
+
+// Ajax call to update vote count.
+add_action('wp_ajax_pro_vote_update', 'pro_vote_update');
