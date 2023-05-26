@@ -1,0 +1,142 @@
+.slider {
+    width: 100%;
+    height: 600px;
+    overflow: hidden;
+    position: relative;
+    font-family: "Argentum Sans", sans-serif;
+}
+
+.slides {
+    list-style-type: none;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    transition: transform 0.3s ease-in-out;
+    display: flex;
+}
+
+.slides>li {
+    flex: 0 0 100%;
+    height: 100%;
+    overflow: hidden;
+    transition: flex 0.3s ease-in-out;
+    border: 1px solid white;
+}
+
+.slides>li:first-child {
+    flex: 0 0 100%;
+}
+
+.slides>li:not(:first-child) {
+    flex: 0 0 100%;
+    position: relative;
+}
+
+.slides>li:hover {
+    flex: 0 0 100% !important;
+    transform: translateX(0) !important;
+}
+
+.slider img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease-in-out;
+}
+
+.slider img:hover {
+    transform: scale(1.1);
+    animation: zoom-infinite 10s infinite;
+}
+
+@keyframes zoom-infinite {
+    0% {
+        transform: scale(1);
+    }
+
+    100% {
+        transform: scale(1.2);
+    }
+}
+
+.slider .slides .slide {
+    position: relative;
+}
+
+.slider .slides .slide .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 4;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.slider .slides .slide:hover .overlay {
+    opacity: 4;
+}
+
+.slider .slides .slide .content {
+    position: absolute;
+    bottom: 120px;
+    left: 144px;
+    color: white;
+    z-index: 2;
+}
+
+.slider .slides .slide .content h2 {
+    font-size: 30px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    color: #fff;
+}
+
+.slider .slides .slide .content p {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 20px;
+}
+
+.slider .slides .slide .content .buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.button2,
+.button2 a {
+    font-weight: 700;
+    color: #fff !important;
+}
+
+.slider .slides .slide .content .buttons a {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #fff;
+    color: red;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 800;
+    font-size: 16px;
+}
+
+.content {
+    width: 700px;
+    word-wrap: break-word;
+}
+
+.buttons-cont {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-bottom: 20px;
+    max-width: 364px;
+    font-weight: 800;
+}
+
+.button2 a i {
+    padding: 10px;
+}
