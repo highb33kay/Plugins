@@ -1,0 +1,83 @@
+<style>
+	/* Style the map element */
+	#myMap {
+		width: 100%;
+		height: 500px;
+		border: 1px solid black;
+	}
+</style>
+
+<!-- Load the Bing Maps V8 Web Control -->
+<script type="text/javascript"
+	src="https://www.bing.com/api/maps/mapcontrol?callback=loadMapScenario&key=AvMsYYUBsECFVo9vzQDPgNyfIFwguYrB9VjQ73L2FLURzAKT0Lh4dUd5jkmHy4wM"
+	async defer></script>
+
+<script type="text/javascript">
+	// Define the destinations as an array of objects with name and location properties
+	var destinations = [
+		{ name: "Accra", location: [5.6037, -0.1870] },
+		{ name: "Kumasi", location: [6.6885, -1.6244] },
+		{ name: "Tamale", location: [9.4329, -0.8485] },
+		{ name: "Lagos", location: [6.5244, 3.3792] },
+		{ name: "Bridgetown", location: [13.0974, -59.6145] },
+		{ name: "Abuja", location: [9.0765, 7.3986] },
+		{ name: "Montego Bay", location: [18.4762, -77.8939] },
+		{ name: "Enugu", location: [6.4413, 7.4988] },
+		{ name: "Bermuda", location: [32.3078, -64.7505] },
+		{ name: "Douala", location: [4.0511, 9.7679] },
+		{ name: "Abidjan", location: [5.3599, -4.0083] },
+		{ name: "GeorgeTown", location: [6.8046, -58.1553] },
+		{ name: "Kinshasa", location: [-4.4419, 15.2663] },
+		{ name: "Point Noire", location: [-4.7692, 11.8664] },
+		{ name: "Miami", location: [25.7617, -80.1918] },
+		{ name: "Boston", location: [42.3601, -71.0589] },
+		{ name: "Toronto", location: [43.6532, -79.3832] }
+	];
+
+	// Define a function to load the map scenario
+	function loadMapScenario() {
+		// Create a map instance
+		var map = new Microsoft.Maps.Map(document.getElementById('myMap'), {
+			// Set the map center and zoom level
+			center: new Microsoft.Maps.Location(10, -10),
+			zoom: isMobileDevice() ? 1 : 3,
+			mapTypeId: Microsoft.Maps.MapTypeId.aerial,
+		});
+
+		// Add pushpins for each destination
+		destinations.forEach(function (destination) {
+
+			// mobile pushpin
+			var mobilePushpin = new Microsoft.Maps.Pushpin(new Microsoft.Maps.Location(destination.location[0], destination.location[1]), {
+				icon: 'https://malaikair.com/wp-content/uploads/2024/01/pin-3.png',
+			});
+
+			var defaultPushpin = new Microsoft.Maps.Pushpin(new Microsoft.Maps.Location(destination.location[0], destination.location[1]), {
+				title: destination.name,
+				icon: 'https://malaikair.com/wp-content/uploads/2024/01/pin-3.png',
+				// anchor: new Microsoft.Maps.Point(5, 5),
+			});
+
+			// set the pushpin to the mobile pushpin if on a mobile device else use the default pushpin
+			// 			var pushpin = isMobileDevice() ? mobilePushpin : defaultPushpin;
+			var pushpin = defaultPushpin;
+			// Add the pushpin to the map
+			map.entities.push(pushpin);
+		});
+	}
+
+
+	// Function to check if the device is a mobile device
+	function isMobileDevice() {
+		return window.innerWidth <= 768; // Adjust the threshold as needed
+	}
+
+	// Load the map only after the entire page is loaded
+	window.onload = function () {
+		loadMapScenario();
+	};
+</script>
+
+<body>
+	<div id="myMap"></div>
+</body>
