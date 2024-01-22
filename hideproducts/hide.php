@@ -61,11 +61,12 @@ function hide_out_of_stock_products()
 
 function shop_only_instock_products($meta_query, $query)
 {
-	// Check if the current page is the out-of-stock category page
-	$is_outofstock_category_page = is_product_category('out-of-stock');
+	// Check if the current page is the out-of-stock category page or out-of-stock page
+
+	$is_outofstock = is_product_category('out-of-stock') || is_page('out-of-stock');
 
 	// If it's the out-of-stock category page, include out-of-stock products in the query
-	if ($is_outofstock_category_page) {
+	if ($is_outofstock) {
 		return $meta_query;
 	}
 
@@ -78,8 +79,6 @@ function shop_only_instock_products($meta_query, $query)
 
 	return $meta_query;
 }
-
-
 
 /**
  * Exclude out of stock products from search results
