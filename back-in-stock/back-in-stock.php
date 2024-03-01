@@ -6,8 +6,43 @@
  * Version: 1.1
  * Author: Boma Dave
  */
+
+// Activation hook for checking WooCommerce activation
+function bave_activate_plugin()
+{
+	if (!class_exists('WooCommerce')) {
+		wp_die('This plugin requires WooCommerce to be installed and active.');
+	}
+	// Perform any other activation setup here
+}
+register_activation_hook(__FILE__, 'bave_activate_plugin');
+
+// activate plugin
+add_action('init', function () {
+	add_filter('woocommerce_default_catalog_orderby_options', 'rey_addBackInStockCounterProductOrderSetting');
+	add_filter('woocommerce_catalog_orderby', 'rey_addBackInStockCounterProductOrderSetting');
+	add_action('woocommerce_product_set_stock', 'bave_check_and_add_back_in_stock_category');
+	add_filter('woocommerce_get_catalog_ordering_args', 'rey_sortProductsByBackInStockCounter');
+	add_filter('woocommerce_catalog_orderby', 'rey_modifyCatalogOrderbyOptions');
+	add_filter('woocommerce_get_catalog_ordering_args', 'rey_modifyCatalogOrderbyArgs');
+});
+
+// Deactivation hook for cleanup
+function bave_deactivate_plugin()
+{
+	// remove filters and actions
+	remove_filter('woocommerce_default_catalog_orderby_options', 'rey_addBackInStockCounterProductOrderSetting');
+	remove_filter('woocommerce_catalog_orderby', 'rey_addBackInStockCounterProductOrderSetting');
+	remove_action('woocommerce_product_set_stock', 'bave_check_and_add_back_in_stock_category');
+	remove_filter('woocommerce_get_catalog_ordering_args', 'rey_sortProductsByBackInStockCounter');
+	remove_filter('woocommerce_catalog_orderby', 'rey_modifyCatalogOrderbyOptions');
+	remove_filter('woocommerce_get_catalog_ordering_args', 'rey_modifyCatalogOrderbyArgs');
+	// Perform any other deactivation cleanup here
+}
+register_deactivation_hook(__FILE__, 'bave_deactivate_plugin');
+
 // Hook into WooCommerce product stock change
-add_action('woocommerce_product_set_stock', 'bave_check_and_add_back_in_stock_category');
+
 function bave_check_and_add_back_in_stock_category($product)
 {
 	$product_id = $product->get_id();
@@ -42,8 +77,6 @@ function rey_addBackInStockCounterProductOrderSetting($sortby)
 	$sortby['back_in_stock'] = 'Back in Stock';
 	return $sortby;
 }
-add_filter('woocommerce_default_catalog_orderby_options', 'rey_addBackInStockCounterProductOrderSetting');
-add_filter('woocommerce_catalog_orderby', 'rey_addBackInStockCounterProductOrderSetting');
 
 // Sort products by back_in_stock when setting is used
 // Sort products by back_in_stock_counter when setting is used
@@ -57,7 +90,7 @@ function rey_sortProductsByBackInStockCounter($args)
 	}
 	return $args;
 }
-add_filter('woocommerce_get_catalog_ordering_args', 'rey_sortProductsByBackInStockCounter');
+
 
 // Function to check if the current page is the back-in-stock page or the back-in-stock category page
 function is_back_in_stock_page()
@@ -95,7 +128,7 @@ function rey_modifyCatalogOrderbyOptions($sortby)
 	}
 	return $sortby;
 }
-add_filter('woocommerce_catalog_orderby', 'rey_modifyCatalogOrderbyOptions');
+
 
 // Function to modify the catalog ordering args
 function rey_modifyCatalogOrderbyArgs($args)
@@ -109,4 +142,3 @@ function rey_modifyCatalogOrderbyArgs($args)
 	}
 	return $args;
 }
-add_filter('woocommerce_get_catalog_ordering_args', 'rey_modifyCatalogOrderbyArgs');

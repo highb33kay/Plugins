@@ -1,0 +1,86 @@
+<?php
+// Function to check if a user has WooCommerce purchases
+function has_woocommerce_purchase($user_id)
+{
+	// Check if WooCommerce is active
+	if (class_exists('WooCommerce')) {
+		// Get orders associated with the user
+		$customer_orders = wc_get_orders(array(
+			'limit'    => -1,
+			'customer' => $user_id,
+			'status'   => array('completed', 'processing'), // Consider only completed and processing orders
+		));
+
+		// If the user has orders, return true
+		if ($customer_orders) {
+			return true;
+		}
+	}
+
+	// If WooCommerce is not active or no orders found, return false
+	return false;
+}
+
+// Function to delete users
+function delete_users($offset = 0)
+{
+	global $wpdb;
+	$deleted_users = array(); // Array to store deleted user IDs
+
+	require_once(ABSPATH . 'wp-admin/includes/user.php');
+
+	$users = get_users(
+		array(
+			'fields'       => array('ID'),
+			'orderby'      => 'ID',
+			'order'        => 'DESC',
+			'offset'       => $offset,
+			'number'       => 1000,
+			'role__not_in' => array('administrator', 'customer', 'Pathways-Video-Access', 'Contributor'),
+		)
+	);
+
+	foreach ($users as $user) {
+		$args = array(
+			'author'         => $user->ID,
+			'post_type'      => 'post',
+			'posts_per_page' => -1,
+		);
+
+		$total_posts = count(get_posts($args));
+
+		$args['post_type'] = 'page';
+		$total_pages = count(get_posts($args));
+
+		// Adjust 'cpt' with the actual name of your custom post type
+		$args['post_type'] = 'cpt';
+		$total_cpt = count(get_posts($args));
+
+		// Check if the user has WooCommerce purchases
+		$has_purchases = has_woocommerce_purchase($user->ID);
+
+		// Check if the user has no associated content, no WooCommerce purchases, and no first name or last name
+		$first_name = get_user_meta($user->ID, 'first_name', true);
+		$last_name = get_user_meta($user->ID, 'last_name', true);
+
+		if ($total_posts === 0 && $total_pages === 0 && $total_cpt === 0 && !$has_purchases && empty($first_name) && empty($last_name)) {
+			// Store the deleted user ID
+			$deleted_users[] = $user->ID;
+
+			// Delete the user
+			wp_delete_user($user->ID);
+		}
+	}
+
+	// Display a popup with the list of deleted users
+	if (!empty($deleted_users)) {
+?>
+		<script type="text/javascript">
+			alert('Deleted Users:\n<?php echo implode(', ', $deleted_users); ?>');
+		</script>
+<?php
+	}
+}
+
+// Call the function to delete users
+delete_users(0);
