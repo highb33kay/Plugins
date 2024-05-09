@@ -60,7 +60,9 @@ if (!class_exists('CustomWCPDFBulk')) :
 
 		public function get_nonce()
 		{
+			$current_url = $_SERVER['REQUEST_URI'];
 
+			set_transient('currentURL', $current_url, HOUR_IN_SECONDS);
 			// Check if we are on the WooCommerce orders page
 			$screen = get_current_screen();
 			if ($screen && $screen->post_type === 'shop_order' && !isset($_GET['action'])) {
@@ -121,6 +123,7 @@ if (!class_exists('CustomWCPDFBulk')) :
 
 		public function handle_bulk_action($redirect_to, $doaction, $post_ids)
 		{
+			$current_url = get_transient('currentURL');
 			if ($doaction === 'pdf-invoice' || $doaction === 'pdf-slip') {
 				//Perform your custom action here
 				$order_ids = $_REQUEST['id'] ?? $_REQUEST['post'];
@@ -168,9 +171,9 @@ if (!class_exists('CustomWCPDFBulk')) :
 				}
 
 				if (count($valid) === 0) {
-					echo "<script>window.open('admin.php?page=wc-orders', '_self');</script>";
+					echo "<script>window.open('{$current_url}', '_self');</script>";
 				}
-				echo "<script>window.open('admin.php?page=wc-orders', '_self');window.open('$pdf_generation_url', '_blank');</script>";
+				echo "<script>window.open('{$current_url}', '_self');window.open('$pdf_generation_url', '_blank');</script>";
 				exit();
 			}
 		}
