@@ -24,11 +24,45 @@ if (!class_exists('Custom_Main')) :
 			// Add your custom code for the CustomMain class here
 
 			/* Start Custom Script */
-			add_action( 'wp_ajax_generate_wpo_wcpdf_extension', array( $this, 'generate_document_ajax' ) );
-			add_action( 'wp_ajax_nopriv_generate_wpo_wcpdf_extension', array( $this, 'generate_document_ajax' ) );
+			add_action('wp_ajax_generate_wpo_wcpdf_extension', array($this, 'generate_document_ajax'));
+			add_action('wp_ajax_nopriv_generate_wpo_wcpdf_extension', array($this, 'generate_document_ajax'));
 			/* End Custom Script */
 		}
-		
+
+
+		/**
+		 * Get printed/downloaded status by order IDs
+		 * @param array $order_ids Array of order IDs
+		 * @return array Status of prints/downloads for each order
+		 */
+		public function getOrderPrintedStatusByIDsFunc($order_ids)
+		{
+			$status = [];
+			foreach ($order_ids as $order_id) {
+				// Assuming 'pdfType' is defined somewhere in your context; this needs to be dynamically set based on actual use case.
+				$pdfType = 'download_slip_' . $order_id; // example, adjust based on your pdf type handling
+				$download_count = get_post_meta($order_id, $pdfType, true);
+				$status[$order_id] = [
+					'pdfType' => $pdfType,
+					'downloads' => $download_count ? $download_count : 'Not Downloaded'
+				];
+			}
+			return $status;
+		}
+
+
+		public function add_engraving_notes($orderID, $createdBy, $totalPrinted)
+		{
+			$currentDate = date('Y-m-d H:i:s');
+			//because I already have the ID from the hook I am using.
+			$order = new WC_Order($orderID);
+
+			// The text for the note
+			$note = __("Order has been printed by $createdBy. Total printed: $totalPrinted as at $currentDate.");
+
+			// Add the note
+			$order->add_order_note($note);
+		}
 
 		/**
 		 * Load and generate the template output with ajax
@@ -37,12 +71,12 @@ if (!class_exists('Custom_Main')) :
 		{
 
 			//die(var_dump($_REQUEST));
-			
+
 			$access_type  = WPO_WCPDF()->endpoint->get_document_link_access_type();
 			$redirect_url = WPO_WCPDF()->endpoint->get_document_denied_frontend_redirect_url();
 
 			//Need to rework this
-			$_REQUEST['access_key'] =  wp_create_nonce('generate_wpo_wcpdf_extension');	
+			$_REQUEST['access_key'] =  wp_create_nonce('generate_wpo_wcpdf_extension');
 
 			// handle bulk actions access key (_wpnonce) and legacy access key (order_key)
 			if (empty($_REQUEST['access_key'])) {
@@ -145,31 +179,31 @@ if (!class_exists('Custom_Main')) :
 
 			switch ($access_type) {
 				case 'logged_in':
-				if (!is_user_logged_in() || !$valid_nonce) {
-					$allowed = false;
-					break;
-				}
-
-				if (!$full_permission) {
-					if (!isset($_REQUEST['my-account']) && !isset($_REQUEST['shortcode'])) {
+					if (!is_user_logged_in() || !$valid_nonce) {
 						$allowed = false;
 						break;
 					}
+
+					if (!$full_permission) {
+						if (!isset($_REQUEST['my-account']) && !isset($_REQUEST['shortcode'])) {
+							$allowed = false;
+							break;
+						}
 
 						// check if current user is owner of order IMPORTANT!!!
-					if (!current_user_can('view_order', $order_ids[0])) {
+						if (!current_user_can('view_order', $order_ids[0])) {
+							$allowed = false;
+							break;
+						}
+					}
+					break;
+				case 'full':
+					// check if we have a valid access key only when it's not from bulk actions
+					if (!isset($_REQUEST['bulk']) && $order && !hash_equals($order->get_order_key(), $_REQUEST['access_key'])) {
 						$allowed = false;
 						break;
 					}
-				}
-				break;
-				case 'full':
-					// check if we have a valid access key only when it's not from bulk actions
-				if (!isset($_REQUEST['bulk']) && $order && !hash_equals($order->get_order_key(), $_REQUEST['access_key'])) {
-					$allowed = false;
 					break;
-				}
-				break;
 			}
 
 			$allowed = apply_filters('wpo_wcpdf_check_privs', $allowed, $order_ids);
@@ -226,43 +260,45 @@ if (!class_exists('Custom_Main')) :
 
 					switch ($output_format) {
 						case 'ubl':
-						$document->output_ubl();
-						break;
+							$document->output_ubl();
+							break;
 						case 'html':
-						add_filter('wpo_wcpdf_use_path', '__return_false');
-						$document->output_html();
-						break;
+							add_filter('wpo_wcpdf_use_path', '__return_false');
+							$document->output_html();
+							break;
 						case 'pdf':
 						default:
-						if (has_action('wpo_wcpdf_created_manually')) {
-							do_action('wpo_wcpdf_created_manually', $document->get_pdf(), $document->get_filename());
-						}
-						$output_mode = WPO_WCPDF()->settings->get_output_mode($document_type);
+							if (has_action('wpo_wcpdf_created_manually')) {
+								do_action('wpo_wcpdf_created_manually', $document->get_pdf(), $document->get_filename());
+							}
+							$output_mode = WPO_WCPDF()->settings->get_output_mode($document_type);
 
-						/* Start Custom Script */
-						$userID = get_current_user_id();
-						$userData = get_userdata($userID);
-						$createdBy = isset($userData->data->ID) ? $userData->data->ID : "";
+							/* Start Custom Script */
+							$userID = get_current_user_id();
+							$userData = get_userdata($userID);
+							$createdBy = isset($userData->data->ID) ? $userData->data->ID : "";
 
-						if (isset($userData->first_name)) {
-							$createdBy = $createdBy . "||" . $userData->first_name;
-							if (isset($userData->last_name)) $createdBy .= " " . $userData->last_name;
-						} else if (isset($userData->data->user_login)) {
-							$createdBy = $createdBy . "||" . $userData->data->user_login;
-						}
+							if (isset($userData->first_name)) {
+								$createdBy = $createdBy . "||" . $userData->first_name;
+								if (isset($userData->last_name)) $createdBy .= " " . $userData->last_name;
+							} else if (isset($userData->data->user_login)) {
+								$createdBy = $createdBy . "||" . $userData->data->user_login;
+							}
 
-						foreach ($order_ids as $orderID) {
-							$totalPrinted = get_post_meta($orderID, '_wcpdfSlipTotalCreated' . $userID, true);
-							$totalPrinted = ($totalPrinted) ? ($totalPrinted + 1) : 1;
+							foreach ($order_ids as $orderID) {
+								$totalPrinted = get_post_meta($orderID, '_wcpdfSlipTotalCreated' . $userID, true);
+								$totalPrinted = ($totalPrinted) ? ($totalPrinted + 1) : 1;
 
-							update_post_meta($orderID, '_wcpdfSlipCreated', 1);
-							update_post_meta($orderID, '_wcpdfSlipCreatedBy', $createdBy);
-							update_post_meta($orderID, '_wcpdfSlipTotalCreated' . $userID, $totalPrinted);
-						}
-						/* End Custom Script */
+								$this->add_engraving_notes($orderID, $createdBy, $totalPrinted);
 
-						$document->output_pdf($output_mode);
-						break;
+								update_post_meta($orderID, '_wcpdfSlipCreated', 1);
+								update_post_meta($orderID, '_wcpdfSlipCreatedBy', $createdBy);
+								update_post_meta($orderID, '_wcpdfSlipTotalCreated' . $userID, $totalPrinted);
+							}
+							/* End Custom Script */
+
+							$document->output_pdf($output_mode);
+							break;
 					}
 				} else {
 					$message = sprintf(
@@ -292,6 +328,8 @@ if (!class_exists('Custom_Main')) :
 			exit;
 		}
 	}
+
+
 	//Initialize the custom admin class
 	Custom_Main::instance();
 endif;
