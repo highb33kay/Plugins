@@ -123,7 +123,9 @@ if (!class_exists('CustomWCPDFBulk')) :
 
 		public function handle_bulk_action($redirect_to, $doaction, $post_ids)
 		{
+			//  get the current url
 			$current_url = get_transient('currentURL');
+
 			if ($doaction === 'pdf-invoice' || $doaction === 'pdf-slip') {
 				//Perform your custom action here
 				$order_ids = $_REQUEST['id'] ?? $_REQUEST['post'];
@@ -137,6 +139,33 @@ if (!class_exists('CustomWCPDFBulk')) :
 
 				$invalid = $order_ids['invalid'];
 
+				$created_by_users = array();
+
+				$meta_key = '_wcpdfSlipCreatedBy';
+				$single = true; // Set to true to return a single value
+
+				foreach ($invalid as $order) {
+
+					$order_id = $order['id'];
+
+					$created_by = get_post_meta($order_id, $meta_key, $single);
+
+					// save the user who downloaded the pdf and the number of times they downloaded it in an array
+					if (array_key_exists($created_by, $created_by_users)) {
+						$created_by_users[$created_by] += 1;
+					} else {
+						$created_by_users[$created_by] = 1;
+					}
+					// return the created by user and the number of times they downloaded the pdf in a string format
+					$userDetails = '';
+					if (is_array($created_by_users) && count($created_by_users) > 0) {
+						foreach ($created_by_users as $user => $count) {
+							$userDetails .= $user . " (" . $count . " times), ";
+						}
+						$userDetails = rtrim($userDetails, ", ");
+					}
+				}
+
 				$suffix = count($order_ids) > 1 ? 's' : '';
 
 				$validmessage = count($valid) . " of " . count($order_ids) . " PDF " . ucfirst($document_type) . $suffix . " exported";
@@ -144,7 +173,16 @@ if (!class_exists('CustomWCPDFBulk')) :
 
 				if (count($invalid) > 0) {
 					foreach ($invalid as $value) {
-						$invalidmessage .= "Order {$value['id']} with document type " . ucfirst($value['document_type']) . " has already been downloaded {$value['count']} times.<br>";
+						// Prepare user information for display
+						$userDetails = '';
+						if (is_array($created_by_users) && count($created_by_users) > 0) {
+							// var_dump($created_by_users);
+							foreach ($created_by_users as $user => $count) {
+								$userDetails .= $user . " (" . $count . " times), ";
+							}
+							$userDetails = rtrim($userDetails, ", ");
+						}
+						$invalidmessage .= "Order {$value['id']} with document type " . ucfirst($value['document_type']) . " has already been downloaded {$value['count']} times by {$userDetails}.<br>";
 					}
 				}
 
